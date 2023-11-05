@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 음악 재생</title>
+    <script src="https://www.google.com/jsapi"></script>
+</head>
+<body>
+    <h1>YouTube 음악 재생</h1>
+
+    <!-- YouTube 동영상 URL 입력 폼 -->
+    <form id="youtubeForm">
+        <label for="videoUrl">YouTube 동영상 URL:</label>
+        <input type="text" id="videoUrl" placeholder="YouTube 동영상 URL을 입력하세요">
+        <button type="button" onclick="playMusic()">음악 재생</button>
+    </form>
+
+    <!-- "음악 재생" 버튼 -->
+    <button type="button" onclick="playMusic()">음악 재생</button>
+
+    <!-- 음악 재생 창 -->
+    <audio id="musicPlayer" controls>
+        <source src="" type="audio/mp3">
+        브라우저가 오디오를 지원하지 않습니다.
+    </audio>
+
+    <!-- 현재 재생 중인 음악 정보 표시 -->
+    <div id="currentMusic">현재 재생 중인 음악: </div>
+
+    <!-- 유튜브 동영상 링크 입력 폼 -->
+    <form id="youtubeLinkForm">
+        <label for="youtubeLink">유튜브 동영상 링크:</label>
+        <input type="text" id="youtubeLink" placeholder="유튜브 동영상 링크를 입력하세요">
+        <button type="button" onclick="playYouTubeVideo()">동영상 재생</button>
+    </form>
+
+    <script>
+        google.load("client", "1");
+
+        function playMusic() {
+            const videoUrl = document.getElementById("videoUrl").value;
+            const videoId = extractVideoId(videoUrl);
+
+            if (videoId) {
+                // YouTube Data API로 동영상 정보 가져오기
+                gapi.client.init({
+                    'apiKey': 'YOUR_YOUTUBE_API_KEY'
+                }).then(function() {
+                    return gapi.client.request({
+                        'path': 'https://www.googleapis.com/youtube/v3/videos',
+                        'params': {
+                            'part': 'snippet',
+                            'id': videoId
+                        }
+                    });
+                }).then(function(response) {
+                    const videoTitle = response.result.items[0].snippet.title;
+                    const audioUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+                    // 음악 재생 창에 오디오 스트림 설정
+                    const musicPlayer = document.getElementById("musicPlayer");
+                    musicPlayer.src = audioUrl;
+
+                    // 현재 재생 중인 음악 정보 표시
+                    const currentMusic = document.getElementById("currentMusic");
+                    currentMusic.textContent = `현재 재생 중인 음악: ${videoTitle}`;
+
+                    // 음악 재생
+                    musicPlayer.load();
+                    musicPlayer.play();
+                });
+            } else {
+                alert("유효한 YouTube 동영상 URL을 입력하세요.");
+            }
+        }
+        
+        function playYouTubeVideo() {
+            const youtubeLink = document.getElementById("youtubeLink").value;
+            const videoId = extractVideoId(youtubeLink);
+
+            if (videoId) {
+                const videoUrl = `https://www.youtube.com/embed/${videoId}`;
+                
+                // 동영상 재생 창 생성 및 표시
+                const videoPlayer = document.createElement("iframe");
+                videoPlayer.src = videoUrl;
+                videoPlayer.width = "560";
+                videoPlayer.height = "315";
+                videoPlayer.allowfullscreen = "true";
+
+                const videoPlayerContainer = document.getElementById("videoPlayerContainer");
+                videoPlayerContainer.innerHTML = "";
+                videoPlayerContainer.appendChild(videoPlayer);
+            } else {
+                alert("유효한 YouTube 동영상 링크를 입력하세요.");
+            }
+        }
+
+        function extractVideoId(url) {
+            const regex = /[?&]v=([^?&]+)/;
+            const match = url.match(regex);
+            return match && match[1];
+        }
+    </script>
+
+    <script src="https://apis.google.com/js/client.js?onload=onLoadCallback"></script>
+</body>
+</html>
